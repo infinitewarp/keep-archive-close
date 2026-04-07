@@ -10,13 +10,14 @@
     <div class="container">
         <h1>Voting Session</h1>
 
-        <div class="session-info">
-            <p>Session ID: <code id="sessionId">{{ session_id }}</code></p>
-            <p>You are: <span id="currentUserName" class="user-name-edit">{{ user_name }}</span></p>
-        </div>
-
         <div class="voting-area">
-            <button id="startVoteBtn" onclick="handleVoteButton()" class="btn btn-start">Start New Vote</button>
+            <div class="vote-controls">
+                <button id="startVoteBtn" onclick="handleVoteButton()" class="btn btn-start">Start New Vote</button>
+                <div class="timer-input-group">
+                    <input type="number" id="timerDuration" min="1" max="999" value="15" class="timer-input">
+                    <label for="timerDuration" class="timer-label">seconds</label>
+                </div>
+            </div>
 
             <div id="timerDisplay" class="timer" style="display: none;">
                 <span id="timerValue">15</span>
@@ -29,7 +30,6 @@
             </div>
 
             <div id="results" class="results" style="display: none;">
-                <h2>Results</h2>
                 <div id="resultsContent"></div>
             </div>
         </div>
@@ -38,16 +38,48 @@
             <h3>Participants</h3>
             <ul id="userList"></ul>
         </div>
+
+        <div class="session-info">
+            <p>Session ID: <code id="sessionId">{{ session_id }}</code> <a href="#" id="disconnectBtn" class="disconnect-link">Leave Session</a></p>
+            <p>You are: <span id="currentUserName" class="user-name-edit">{{ user_name }}</span></p>
+            <p>Your color: <input type="color" id="userColor" value="{{ user_color }}" class="color-picker"></p>
+        </div>
     </div>
 
     <script>
         const sessionId = '{{ session_id }}';
-        const initialUserName = '{{ user_name }}';
+        let initialUserName = '{{ user_name }}';
+        const initialUserColor = '{{ user_color }}';
+
+        // Check if name is missing and prompt for it
+        if (!initialUserName || initialUserName.trim() === '') {
+            // Try to get from localStorage first
+            const savedName = localStorage.getItem('userName');
+            if (savedName && savedName.trim() !== '') {
+                initialUserName = savedName;
+            } else {
+                // Prompt user to enter their name
+                while (!initialUserName || initialUserName.trim() === '') {
+                    initialUserName = prompt('Please enter your name to join this session:');
+                    if (initialUserName === null) {
+                        // User cancelled, redirect to home
+                        window.location.href = '/';
+                    }
+                }
+                initialUserName = initialUserName.trim();
+                // Save to localStorage
+                localStorage.setItem('userName', initialUserName);
+            }
+        }
+
         let currentUserName = initialUserName;
+        let currentUserColor = initialUserColor;
         let connectionId = null;
         let ws = null;
         let heartbeatInterval = null;
         let voteIsActive = false;
+        let myVote = null;
+        let customTimerDuration = 15;
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -58,7 +90,8 @@
                 // Send join message
                 ws.send(JSON.stringify({
                     type: 'join',
-                    name: currentUserName
+                    name: currentUserName,
+                    color: currentUserColor
                 }));
 
                 // Start heartbeat
@@ -92,12 +125,19 @@
                     updateUserList(message.users);
                     voteIsActive = message.vote_active;
                     if (message.vote_active) {
+                        // Sync timer duration across all clients
+                        if (message.vote_duration) {
+                            customTimerDuration = message.vote_duration;
+                            document.getElementById('timerDuration').value = message.vote_duration;
+                        }
                         showVotingButtons();
                         updateVoteButton(true);
                         document.getElementById('results').style.display = 'none';
                     } else {
                         hideVotingButtons();
                         updateVoteButton(false);
+                        myVote = null;
+                        clearVoteSelection();
                     }
                     break;
 
@@ -106,9 +146,10 @@
                     break;
 
                 case 'vote_results':
-                    showResults(message.results, message.winner);
+                    voteIsActive = false;
+                    showResults(message.results, message.winner, message.tied_options);
                     hideTimer();
-                    disableVotingButtons();
+                    hideVotingButtons();
                     updateVoteButton(false);
                     break;
             }
@@ -123,7 +164,25 @@
         }
 
         function startVote() {
-            ws.send(JSON.stringify({ type: 'start_vote' }));
+            // Get and validate timer duration
+            const durationInput = document.getElementById('timerDuration');
+            let duration = parseInt(durationInput.value);
+
+            // Validate: must be positive integer
+            if (isNaN(duration) || duration < 1) {
+                duration = 15;
+                durationInput.value = 15;
+            } else if (duration > 999) {
+                duration = 999;
+                durationInput.value = 999;
+            }
+
+            customTimerDuration = duration;
+
+            ws.send(JSON.stringify({
+                type: 'start_vote',
+                duration: customTimerDuration
+            }));
         }
 
         function abandonVote() {
@@ -132,14 +191,18 @@
 
         function updateVoteButton(isActive) {
             const btn = document.getElementById('startVoteBtn');
+            const timerInput = document.getElementById('timerDuration');
+
             if (isActive) {
                 btn.textContent = 'Abandon Vote';
                 btn.classList.remove('btn-start');
                 btn.classList.add('btn-abandon');
+                timerInput.disabled = true;
             } else {
                 btn.textContent = 'Start New Vote';
                 btn.classList.remove('btn-abandon');
                 btn.classList.add('btn-start');
+                timerInput.disabled = false;
             }
             btn.disabled = false;
         }
@@ -149,6 +212,32 @@
                 type: 'vote',
                 vote: choice
             }));
+            myVote = choice;
+            highlightVoteSelection(choice);
+        }
+
+        function highlightVoteSelection(choice) {
+            // Remove previous selection
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            // Highlight selected button
+            const buttonClasses = {
+                'keep': 'btn-keep',
+                'archive': 'btn-archive',
+                'close': 'btn-close'
+            };
+            const selectedBtn = document.querySelector(`.${buttonClasses[choice]}`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+            }
+        }
+
+        function clearVoteSelection() {
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
         }
 
         function updateUserList(users) {
@@ -158,6 +247,7 @@
             users.forEach(user => {
                 const li = document.createElement('li');
                 li.textContent = user.name;
+                li.style.borderLeft = `4px solid ${user.color}`;
                 if (!user.has_voted) {
                     li.classList.add('dimmed');
                 }
@@ -191,7 +281,7 @@
             const timerDisplay = document.getElementById('timerDisplay');
             // Only reset timer value if it's currently hidden (starting fresh vote)
             if (timerDisplay.style.display === 'none') {
-                document.getElementById('timerValue').textContent = '15';
+                document.getElementById('timerValue').textContent = customTimerDuration;
             }
             timerDisplay.style.display = 'block';
         }
@@ -204,27 +294,71 @@
             document.getElementById('timerValue').textContent = remaining;
         }
 
-        function showResults(results, winner) {
+        function showResults(results, winner, tiedOptions) {
             const resultsContent = document.getElementById('resultsContent');
+
+            let winnerText;
+            if (winner === 'tie' && tiedOptions && tiedOptions.length > 0) {
+                // Capitalize each tied option
+                const capitalizedOptions = tiedOptions.map(opt => opt.charAt(0).toUpperCase() + opt.slice(1));
+                // Join with Oxford comma and "and" for the last item
+                const optionsText = capitalizedOptions.length === 2
+                    ? capitalizedOptions.join(' and ')
+                    : capitalizedOptions.slice(0, -1).join(', ') + ', and ' + capitalizedOptions[capitalizedOptions.length - 1];
+                winnerText = `Winner: TIE (${optionsText})`;
+            } else {
+                winnerText = `Winner: ${winner.toUpperCase()}`;
+            }
+
             resultsContent.innerHTML = `
+                <div class="winner">${winnerText}</div>
                 <div class="result-item">Keep: ${results.keep}</div>
                 <div class="result-item">Archive: ${results.archive}</div>
                 <div class="result-item">Close: ${results.close}</div>
-                <div class="winner">Winner: ${winner === 'tie' ? 'TIE' : winner.toUpperCase()}</div>
             `;
             document.getElementById('results').style.display = 'block';
         }
 
         // Make user name editable
         document.getElementById('currentUserName').addEventListener('click', function() {
-            const newName = prompt('Enter your new name:', currentUserName);
+            const newName = prompt('Enter your new name:', currentUserName || '');
             if (newName && newName.trim()) {
                 currentUserName = newName.trim();
                 this.textContent = currentUserName;
+                // Save to localStorage
+                localStorage.setItem('userName', currentUserName);
                 ws.send(JSON.stringify({
                     type: 'rename',
                     name: currentUserName
                 }));
+            }
+        });
+
+        // Handle color changes
+        document.getElementById('userColor').addEventListener('change', function() {
+            currentUserColor = this.value;
+            // Save to localStorage
+            localStorage.setItem('userColor', currentUserColor);
+            ws.send(JSON.stringify({
+                type: 'change_color',
+                color: currentUserColor
+            }));
+        });
+
+        // Handle disconnect
+        document.getElementById('disconnectBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to leave this session?')) {
+                // Close WebSocket connection
+                if (ws) {
+                    ws.close();
+                }
+                // Clear heartbeat
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                }
+                // Navigate to home
+                window.location.href = '/';
             }
         });
 

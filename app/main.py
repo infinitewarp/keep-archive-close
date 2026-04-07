@@ -2,9 +2,10 @@
 import asyncio
 import json
 from typing import Dict
+from urllib.parse import quote
 from uuid import uuid4
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Form
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -31,34 +32,45 @@ async def landing_page(request: Request):
 
 
 @app.post("/create-session")
-async def create_session(name: str = Form(...)):
+async def create_session(name: str = Form(...), color: str = Form("#667eea")):
     """Create a new voting session."""
     session_id = session_manager.create_session()
-    return RedirectResponse(f"/session/{session_id}?name={name}", status_code=303)
+    response = RedirectResponse(f"/session/{session_id}", status_code=303)
+    response.set_cookie(key="user_name", value=name, max_age=86400*30)  # 30 days
+    response.set_cookie(key="user_color", value=color, max_age=86400*30)  # 30 days
+    return response
 
 
 @app.post("/join-session")
-async def join_session(session_id: str = Form(...), name: str = Form(...)):
+async def join_session(session_id: str = Form(...), name: str = Form(...), color: str = Form("#667eea")):
     """Join an existing voting session."""
     session = session_manager.get_session(session_id)
     if not session:
         return RedirectResponse("/?error=session_not_found", status_code=303)
-    return RedirectResponse(f"/session/{session_id}?name={name}", status_code=303)
+    response = RedirectResponse(f"/session/{session_id}", status_code=303)
+    response.set_cookie(key="user_name", value=name, max_age=86400*30)  # 30 days
+    response.set_cookie(key="user_color", value=color, max_age=86400*30)  # 30 days
+    return response
 
 
 @app.get("/session/{session_id}", response_class=HTMLResponse)
-async def voting_page(request: Request, session_id: str, name: str = ""):
+async def voting_page(request: Request, session_id: str):
     """Voting session page."""
     session = session_manager.get_session(session_id)
     if not session:
         return RedirectResponse("/?error=session_not_found", status_code=303)
+
+    # Get name and color from cookies or localStorage fallback
+    user_name = request.cookies.get("user_name", "")
+    user_color = request.cookies.get("user_color", "#667eea")
 
     return templates.TemplateResponse(
         "voting.html",
         {
             "request": request,
             "session_id": session_id,
-            "user_name": name,
+            "user_name": user_name,
+            "user_color": user_color,
         }
     )
 
@@ -86,7 +98,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
         if initial_msg.get("type") == "join":
             user_name = initial_msg.get("name", "Anonymous")
-            user = session.add_user(connection_id, user_name, websocket)
+            user_color = initial_msg.get("color", "#667eea")
+            user = session.add_user(connection_id, user_name, websocket, user_color)
 
             # Broadcast user joined
             await broadcast_session_state(session)
@@ -102,10 +115,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 msg_type = message.get("type")
 
                 if msg_type == "start_vote":
-                    session.start_vote()
+                    duration = message.get("duration", 15)
+                    # Validate duration
+                    if not isinstance(duration, int) or duration < 1 or duration > 999:
+                        duration = 15
+                    session.start_vote(duration)
                     await broadcast_session_state(session)
-                    # Start countdown timer
-                    asyncio.create_task(countdown_timer(session))
+                    # Start countdown timer with custom duration
+                    asyncio.create_task(countdown_timer(session, duration))
 
                 elif msg_type == "abandon_vote":
                     session.abandon_vote()
@@ -120,6 +137,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 elif msg_type == "rename":
                     new_name = message.get("name", "Anonymous")
                     session.rename_user(connection_id, new_name)
+                    await broadcast_session_state(session)
+
+                elif msg_type == "change_color":
+                    new_color = message.get("color", "#667eea")
+                    session.change_user_color(connection_id, new_color)
                     await broadcast_session_state(session)
 
                 elif msg_type == "heartbeat":
@@ -140,9 +162,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 session_manager.delete_session(session_id)
 
 
-async def countdown_timer(session):
+async def countdown_timer(session, duration=15):
     """Run countdown timer for voting round."""
-    for remaining in range(VOTE_DURATION, 0, -1):
+    for remaining in range(duration, 0, -1):
         await asyncio.sleep(1)
         if not session.current_round.active:
             break
@@ -160,6 +182,7 @@ async def broadcast_session_state(session):
         "type": "state_update",
         "users": session.get_user_list(),
         "vote_active": session.current_round.active,
+        "vote_duration": session.current_round.duration if session.current_round.active else None,
     }
     await broadcast_to_session(session, message)
 
@@ -183,6 +206,7 @@ async def broadcast_vote_results(session, results):
         "type": "vote_results",
         "results": results,
         "winner": winners[0] if len(winners) == 1 else "tie",
+        "tied_options": winners if len(winners) > 1 else None,
     }
     await broadcast_to_session(session, message)
 

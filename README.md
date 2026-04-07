@@ -5,9 +5,11 @@ keep-archive-close is a very simple single-purpose multi-user web app that prese
 ## Features
 
 - Real-time multi-user voting sessions
-- Timer-enforced decision making (15 seconds)
-- Anonymous session URLs (UUID-based)
-- Live participant tracking
+- Customizable countdown timer (1-999 seconds, synced across all clients)
+- User personalization (choose name and color, persisted across sessions)
+- Vote selection feedback (visual highlight shows your current vote)
+- Anonymous session URLs (UUID-based, clean shareable links without user data)
+- Live participant tracking with color-coded borders
 - WebSocket-based real-time updates
 - Automatic dark mode support (respects system preferences)
 - Lightweight single-container deployment
@@ -44,21 +46,23 @@ uv run uvicorn app.main:app --reload
 
 ## How It Works
 
-1. Enter your name on the landing page
+1. Enter your name and pick a color on the landing page
 2. Create a new session or join an existing one with a session ID
-3. Share the session URL with your team
-4. Anyone in the session can click "Start New Vote"
-5. A 15-second countdown begins and voting buttons activate
-6. Cast your vote (keep, archive, or close)
-7. During voting, the button changes to "Abandon Vote" to cancel if needed
-8. When the timer ends, results are displayed with the winner
-9. Start another vote to continue evaluating more items
+3. Share the clean session URL with your team (no personal data in URL)
+4. Optionally adjust the countdown timer duration (defaults to 15 seconds)
+5. Anyone in the session can click "Start New Vote"
+6. The countdown begins and voting buttons activate
+7. Cast your vote (keep, archive, or close) - a border highlights your choice
+8. During voting, the button changes to "Abandon Vote" to cancel if needed
+9. When the timer ends, results are displayed with the winner
+10. Start another vote to continue evaluating more items
 
 ## Technical Stack
 
 - **Backend**: FastAPI with WebSocket support
 - **Frontend**: Server-side rendered HTML (Jinja2) with vanilla JavaScript
 - **Real-time**: WebSocket connections for live updates
+- **State persistence**: Cookies (user identity) + localStorage (preferences)
 - **Deployment**: Single Podman container
 - **Dependency management**: uv with locked dependencies (pyproject.toml)
 - **Resource usage**: ~50-100MB memory footprint

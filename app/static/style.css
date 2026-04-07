@@ -165,10 +165,7 @@ input[type="text"]:focus {
     min-width: 150px;
 }
 
-.btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-button);
-}
+/* Hover effects handled by individual button classes with color transitions */
 
 .btn:disabled {
     opacity: 0.5;
@@ -231,7 +228,7 @@ input[type="text"]:focus {
     background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
-    margin-bottom: 30px;
+    margin-top: 30px;
 }
 
 .session-info p {
@@ -249,19 +246,135 @@ input[type="text"]:focus {
     color: var(--text-primary);
 }
 
+.color-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.color-input-full {
+    width: 100%;
+    height: 40px;
+    border: 2px solid var(--border-default);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.color-input-full::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-input-full::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.color-picker {
+    width: 60px;
+    height: 30px;
+    border: 2px solid var(--border-default);
+    border-radius: 6px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
 .user-name-edit {
     color: var(--text-link);
     cursor: pointer;
     text-decoration: underline;
     font-weight: 600;
+    min-width: 20px;
+    display: inline-block;
+}
+
+.user-name-edit:empty::before {
+    content: '(click to set name)';
+    opacity: 0.6;
 }
 
 .user-name-edit:hover {
     color: var(--text-link-hover);
 }
 
+.disconnect-link {
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
+.disconnect-link:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
 .voting-area {
     margin-bottom: 30px;
+}
+
+.vote-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.vote-controls .btn-start,
+.vote-controls .btn-abandon {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.timer-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.timer-input {
+    width: 60px;
+    padding: 8px;
+    background: var(--bg-input);
+    border: 2px solid var(--border-default);
+    border-radius: 6px;
+    font-size: 16px;
+    color: var(--text-primary);
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.timer-input::-webkit-inner-spin-button,
+.timer-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.timer-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.timer-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.timer-label {
+    color: var(--text-secondary);
+    font-size: 14px;
 }
 
 .timer {
@@ -292,6 +405,13 @@ input[type="text"]:focus {
     padding: 20px;
     font-size: 18px;
     min-width: 120px;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.vote-btn.selected {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.8), 0 0 0 8px currentColor !important;
+    transform: scale(1.05) !important;
 }
 
 .btn-keep {
@@ -338,7 +458,7 @@ input[type="text"]:focus {
 }
 
 .winner {
-    margin-top: 20px;
+    margin-bottom: 20px;
     padding: 20px;
     background: var(--color-winner);
     color: white;

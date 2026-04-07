@@ -12,6 +12,7 @@ class User:
     connection_id: str
     name: str
     websocket: object
+    color: str = "#667eea"
     last_seen: float = field(default_factory=time.time)
     has_voted: bool = False
     vote: Optional[str] = None
@@ -22,6 +23,7 @@ class VotingRound:
     """Represents a single voting round."""
     active: bool = False
     start_time: Optional[float] = None
+    duration: int = 15
     votes: Dict[str, str] = field(default_factory=dict)  # connection_id -> vote choice
 
 
@@ -34,9 +36,9 @@ class VotingSession:
         self.current_round: VotingRound = VotingRound()
         self.created_at = time.time()
 
-    def add_user(self, connection_id: str, name: str, websocket) -> User:
+    def add_user(self, connection_id: str, name: str, websocket, color: str = "#667eea") -> User:
         """Add a user to the session."""
-        user = User(connection_id=connection_id, name=name, websocket=websocket)
+        user = User(connection_id=connection_id, name=name, websocket=websocket, color=color)
         self.users[connection_id] = user
         return user
 
@@ -54,9 +56,14 @@ class VotingSession:
         if connection_id in self.users:
             self.users[connection_id].name = new_name
 
-    def start_vote(self) -> None:
+    def change_user_color(self, connection_id: str, new_color: str) -> None:
+        """Change a user's color."""
+        if connection_id in self.users:
+            self.users[connection_id].color = new_color
+
+    def start_vote(self, duration: int = 15) -> None:
         """Start a new voting round."""
-        self.current_round = VotingRound(active=True, start_time=time.time())
+        self.current_round = VotingRound(active=True, start_time=time.time(), duration=duration)
         # Reset vote state for all users
         for user in self.users.values():
             user.has_voted = False
@@ -108,6 +115,7 @@ class VotingSession:
             {
                 "connection_id": user.connection_id,
                 "name": user.name,
+                "color": user.color,
                 "has_voted": user.has_voted
             }
             for user in self.users.values()

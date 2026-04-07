@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-keep-archive-close is a single-purpose multi-user web application for quick decision-making. It provides an interface where multiple participants can simultaneously vote on items using three options: "keep", "archive", or "close". A brief countdown timer (15 seconds) enforces time pressure, encouraging participants to make gut-check assessments without over-analyzing details.
+keep-archive-close is a single-purpose multi-user web application for quick decision-making. It provides an interface where multiple participants can simultaneously vote on items using three options: "keep", "archive", or "close". A customizable countdown timer (default 15 seconds, adjustable 1-999) enforces time pressure, encouraging participants to make gut-check assessments without over-analyzing details. Users personalize their experience with custom names and colors that persist across sessions.
 
 ## Architecture
 
@@ -24,6 +24,8 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 **Session Management:**
 - Sessions identified by UUID (pseudo-anonymous, not security-focused)
 - In-memory tracking via `SessionManager` and `VotingSession` classes
+- User data stored in cookies (name, color) for clean shareable URLs
+- User preferences also persisted in localStorage as fallback
 - Automatic cleanup when all users leave a session
 - 30-second inactivity timeout with heartbeat mechanism
 
@@ -89,22 +91,35 @@ uv run python -c "from app import main, models"
 
 ## Key Behaviors
 
-1. **User Flow**: Name entry → Create/join session → Real-time voting interface
-2. **Voting Round**: Any user starts vote → 15s countdown → Buttons enable → Vote or abandon → Timer ends → Results display → Ready for next vote
+1. **User Flow**: Name + color selection → Create/join session → Real-time voting interface
+   - User data stored in cookies and localStorage (persists across sessions)
+   - Clean URLs without user data for easy sharing
+   - Automatic name prompt if joining via shared URL without prior session
+2. **Voting Round**: Any user starts vote → Custom countdown (1-999s) → Buttons enable → Vote or abandon → Timer ends → Results display → Ready for next vote
    - "Start New Vote" button changes to "Abandon Vote" (red) during active voting
    - Abandon resets vote state without showing results
    - After results display, button returns to "Start New Vote" for continuous voting
-3. **Vote State Tracking**: Users are "dimmed" in participant list until they vote
-4. **Session Lifecycle**: Auto-created on first user → Auto-deleted when last user leaves
-5. **Name Changes**: Click your name to rename (broadcasts update to all users)
+   - Selected vote button shows distinctive border highlight
+   - Timer duration syncs across all clients when vote starts
+3. **User Personalization**: 
+   - Each user has a color (color picker on landing page and in session)
+   - Participant list shows colored left border for each user
+   - Click name to rename, click color picker to change color
+   - All changes broadcast to other users in real-time
+4. **Vote State Tracking**: Users are "dimmed" in participant list until they vote
+5. **Session Lifecycle**: Auto-created on first user → Auto-deleted when last user leaves
 6. **Presence Detection**: Heartbeat every 5s, cleanup every 10s, 30s timeout
 
 ## Configuration
 
-- Vote timer duration: `VOTE_DURATION = 15` in `app/main.py`
+- Vote timer duration: Customizable per vote (1-999 seconds), default 15
+  - User-adjustable input on voting page (disabled during active vote)
+  - Duration stored in `VotingRound.duration` and synced to all clients
+  - Fallback constant: `VOTE_DURATION = 15` in `app/main.py`
 - Heartbeat interval: 5 seconds (client-side in `voting.html`)
 - Cleanup interval: 10 seconds (server-side in `app/main.py`)
 - Inactivity timeout: 30 seconds (configurable in `app/models.py`)
+- Cookie expiration: 30 days (user name and color)
 
 ## Design Constraints
 

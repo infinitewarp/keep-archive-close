@@ -15,6 +15,11 @@
             <h2>Enter Your Name</h2>
             <input type="text" id="userName" placeholder="Your name" autofocus>
 
+            <div style="margin-bottom: 15px;">
+                <label for="userColor" class="color-label">Choose Your Color:</label>
+                <input type="color" id="userColor" value="#667eea" class="color-input-full">
+            </div>
+
             <div class="button-group">
                 <button onclick="createSession()" class="btn btn-primary">Create New Session</button>
                 <button onclick="showJoinForm()" class="btn btn-secondary">Join Existing Session</button>
@@ -32,6 +37,19 @@
     </div>
 
     <script>
+        // Load saved preferences on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedName = localStorage.getItem('userName');
+            const savedColor = localStorage.getItem('userColor');
+
+            if (savedName) {
+                document.getElementById('userName').value = savedName;
+            }
+            if (savedColor) {
+                document.getElementById('userColor').value = savedColor;
+            }
+        });
+
         // Check for error in URL
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('error')) {
@@ -42,10 +60,15 @@
 
         function createSession() {
             const name = document.getElementById('userName').value.trim();
+            const color = document.getElementById('userColor').value;
             if (!name) {
                 alert('Please enter your name');
                 return;
             }
+
+            // Save preferences to localStorage
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userColor', color);
 
             const form = document.createElement('form');
             form.method = 'POST';
@@ -57,6 +80,12 @@
             nameInput.value = name;
             form.appendChild(nameInput);
 
+            const colorInput = document.createElement('input');
+            colorInput.type = 'hidden';
+            colorInput.name = 'color';
+            colorInput.value = color;
+            form.appendChild(colorInput);
+
             document.body.appendChild(form);
             form.submit();
         }
@@ -67,6 +96,7 @@
 
         function joinSession() {
             const name = document.getElementById('userName').value.trim();
+            const color = document.getElementById('userColor').value;
             const sessionId = document.getElementById('sessionId').value.trim();
 
             if (!name) {
@@ -78,6 +108,10 @@
                 return;
             }
 
+            // Save preferences to localStorage
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userColor', color);
+
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/join-session';
@@ -87,6 +121,12 @@
             nameInput.name = 'name';
             nameInput.value = name;
             form.appendChild(nameInput);
+
+            const colorInput = document.createElement('input');
+            colorInput.type = 'hidden';
+            colorInput.name = 'color';
+            colorInput.value = color;
+            form.appendChild(colorInput);
 
             const sessionInput = document.createElement('input');
             sessionInput.type = 'hidden';

@@ -1,8 +1,7 @@
 """Session and voting state management."""
-import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Set
+from typing import Any, Dict, Optional, Set
 from uuid import uuid4
 
 
@@ -109,7 +108,7 @@ class VotingSession:
         """Check if the session has no users."""
         return len(self.users) == 0
 
-    def get_user_list(self):
+    def get_user_list(self) -> list[dict[str, Any]]:
         """Get list of users with their vote status."""
         return [
             {

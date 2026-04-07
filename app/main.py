@@ -2,7 +2,6 @@
 import asyncio
 import json
 from typing import Dict
-from urllib.parse import quote
 from uuid import uuid4
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Form, Response
@@ -17,12 +16,6 @@ app = FastAPI(title="keep-archive-close")
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
-
-# Track active WebSocket connections
-active_connections: Dict[str, WebSocket] = {}
-
-# Voting timer duration in seconds
-VOTE_DURATION = 15
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -115,14 +108,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 msg_type = message.get("type")
 
                 if msg_type == "start_vote":
-                    duration = message.get("duration", 15)
-                    # Validate duration
-                    if not isinstance(duration, int) or duration < 1 or duration > 999:
-                        duration = 15
-                    session.start_vote(duration)
-                    await broadcast_session_state(session)
-                    # Start countdown timer with custom duration
-                    asyncio.create_task(countdown_timer(session, duration))
+                    # Guard against multiple simultaneous vote starts
+                    if not session.current_round.active:
+                        duration = message.get("duration", 15)
+                        # Validate duration
+                        if not isinstance(duration, int) or duration < 1 or duration > 999:
+                            duration = 15
+                        session.start_vote(duration)
+                        await broadcast_session_state(session)
+                        # Start countdown timer with custom duration
+                        asyncio.create_task(countdown_timer(session, duration))
 
                 elif msg_type == "abandon_vote":
                     session.abandon_vote()
@@ -217,7 +212,7 @@ async def broadcast_to_session(session, message):
     for connection_id, user in session.users.items():
         try:
             await user.websocket.send_text(json.dumps(message))
-        except:
+        except Exception:
             disconnected.append(connection_id)
 
     # Clean up disconnected users

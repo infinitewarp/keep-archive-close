@@ -95,3 +95,7 @@ uv run ruff format --check .
 - **Dependency management**: uv with locked dependencies (pyproject.toml)
 - **Resource usage**: ~50-100MB memory footprint
 
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+

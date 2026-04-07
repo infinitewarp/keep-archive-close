@@ -20,11 +20,20 @@ keep-archive-close is a very simple single-purpose multi-user web app that prese
 
 ### Run with Podman
 
+**Using pre-built image (recommended):**
+
+```bash
+podman pull ghcr.io/infinitewarp/keep-archive-close:latest
+podman run --rm -p 8000:8000 ghcr.io/infinitewarp/keep-archive-close:latest
+```
+
+**Using helper script (builds locally):**
+
 ```bash
 ./run-container.sh
 ```
 
-Or manually:
+**Building manually:**
 
 ```bash
 podman build -t keep-archive-close .

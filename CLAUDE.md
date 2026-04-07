@@ -82,10 +82,16 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 ./run-container.sh
 ```
 
-Or manually:
+Or manually with local build:
 ```bash
 podman build -t keep-archive-close .
 podman run --rm -p 8000:8000 keep-archive-close
+```
+
+Or use pre-built multi-arch image from GitHub Container Registry:
+```bash
+podman pull ghcr.io/infinitewarp/keep-archive-close:latest
+podman run --rm -p 8000:8000 ghcr.io/infinitewarp/keep-archive-close:latest
 ```
 
 **Run manually (local Python):**
@@ -151,7 +157,15 @@ uv run ruff format --check . # Check formatting without changing files
 - Checks: Linting (ruff check), formatting (ruff format), unit tests (pytest), syntax validation, import checks, app startup, container build
 - Workflow files: 
   - `.github/workflows/ci.yml` - Code quality and tests
-  - `.github/workflows/container-build.yml` - Multi-arch container build verification (amd64, arm64)
+  - `.github/workflows/container-build.yml` - Multi-arch container build and publish
+    - **On PRs:** Builds for amd64 and arm64 to verify (no push)
+    - **On main:** Builds and pushes to GitHub Container Registry (ghcr.io)
+    - **Tags:** `latest` (main branch), `sha-<commit>` (all builds)
+  - `.github/workflows/cleanup-old-images.yml` - Container image retention
+    - **Runs:** Weekly (Sundays at 00:00 UTC) or manual trigger
+    - **Keeps:** `latest` tag + most recent 10 sha-tagged images
+    - **Deletes:** Older sha-tagged images to prevent accumulation
+    - **Configurable:** Adjust `KEEP_RECENT` env var to change retention count
 
 **Manual syntax check:**
 ```bash

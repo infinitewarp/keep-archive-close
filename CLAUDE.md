@@ -46,6 +46,30 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 - `pyproject.toml` - Project metadata and dependencies (managed by uv)
 - `uv.lock` - Locked dependency versions for reproducible installs
 
+## Git Workflow
+
+**IMPORTANT: The `main` branch is protected and requires pull requests.**
+
+**Before making any changes:**
+1. Check current branch: `git branch --show-current`
+2. If on `main`, create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes and commit to the feature branch
+4. Push the feature branch: `git push -u origin feature/your-feature-name`
+5. Create a pull request on GitHub to merge into `main`
+
+**Branch naming conventions:**
+- Feature branches: `feature/descriptive-name`
+- Bug fixes: `fix/descriptive-name`
+- Documentation: `docs/descriptive-name`
+
+**Merge strategy:**
+- **Rebase only**: The repository is configured to only allow rebase merges (no merge commits or squashing)
+- This maintains a **linear history** without merge commits
+- Feature branches are automatically deleted after merge
+- When merging PRs: `gh pr merge <number> --rebase --delete-branch`
+
+**Never commit directly to `main`.** All changes must go through pull requests to ensure CI checks pass and maintain code quality.
+
 ## Development Commands
 
 **Run locally (recommended for development):**
@@ -122,7 +146,8 @@ uv run ruff format --check . # Check formatting without changing files
 - Modern type hints: Uses `X | None` instead of `Optional[X]`, `dict/list/set` instead of `Dict/List/Set`
 
 **GitHub Actions CI:**
-- Runs automatically on pull requests and pushes to main
+- Runs automatically on all pull requests (required for merge to main)
+- All checks must pass before PR can be merged
 - Checks: Linting (ruff check), formatting (ruff format), unit tests (pytest), syntax validation, import checks, app startup
 - Workflow file: `.github/workflows/ci.yml`
 

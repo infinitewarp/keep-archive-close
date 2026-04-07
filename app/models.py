@@ -69,6 +69,14 @@ class VotingSession:
             self.users[connection_id].vote = vote
             self.current_round.votes[connection_id] = vote
 
+    def abandon_vote(self) -> None:
+        """Abandon the current voting round without tallying results."""
+        self.current_round.active = False
+        # Reset vote state for all users
+        for user in self.users.values():
+            user.has_voted = False
+            user.vote = None
+
     def end_vote(self) -> Dict[str, int]:
         """End the current voting round and return results."""
         self.current_round.active = False

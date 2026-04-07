@@ -107,6 +107,10 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     # Start countdown timer
                     asyncio.create_task(countdown_timer(session))
 
+                elif msg_type == "abandon_vote":
+                    session.abandon_vote()
+                    await broadcast_session_state(session)
+
                 elif msg_type == "vote":
                     vote = message.get("vote")
                     if vote in ["keep", "archive", "close"]:

@@ -131,6 +131,19 @@ input[type="text"]:focus {
     background: #5f3d84;
 }
 
+.btn-abandon {
+    background: #e53e3e;
+    color: white;
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.btn-abandon:hover:not(:disabled) {
+    background: #c53030;
+}
+
 .error {
     background: #fed7d7;
     color: #c53030;

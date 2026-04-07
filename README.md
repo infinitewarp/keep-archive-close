@@ -49,7 +49,9 @@ uv run uvicorn app.main:app --reload
 4. Anyone in the session can click "Start New Vote"
 5. A 15-second countdown begins and voting buttons activate
 6. Cast your vote (keep, archive, or close)
-7. When the timer ends, results are displayed with the winner
+7. During voting, the button changes to "Abandon Vote" to cancel if needed
+8. When the timer ends, results are displayed with the winner
+9. Start another vote to continue evaluating more items
 
 ## Technical Stack
 

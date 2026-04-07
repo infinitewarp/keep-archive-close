@@ -87,7 +87,10 @@ uv run python -c "from app import main, models"
 ## Key Behaviors
 
 1. **User Flow**: Name entry → Create/join session → Real-time voting interface
-2. **Voting Round**: Any user starts vote → 15s countdown → Buttons enable → Timer ends → Results display
+2. **Voting Round**: Any user starts vote → 15s countdown → Buttons enable → Vote or abandon → Timer ends → Results display → Ready for next vote
+   - "Start New Vote" button changes to "Abandon Vote" (red) during active voting
+   - Abandon resets vote state without showing results
+   - After results display, button returns to "Start New Vote" for continuous voting
 3. **Vote State Tracking**: Users are "dimmed" in participant list until they vote
 4. **Session Lifecycle**: Auto-created on first user → Auto-deleted when last user leaves
 5. **Name Changes**: Click your name to rename (broadcasts update to all users)

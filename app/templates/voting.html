@@ -16,7 +16,7 @@
         </div>
 
         <div class="voting-area">
-            <button id="startVoteBtn" onclick="startVote()" class="btn btn-start">Start New Vote</button>
+            <button id="startVoteBtn" onclick="handleVoteButton()" class="btn btn-start">Start New Vote</button>
 
             <div id="timerDisplay" class="timer" style="display: none;">
                 <span id="timerValue">15</span>
@@ -47,6 +47,7 @@
         let connectionId = null;
         let ws = null;
         let heartbeatInterval = null;
+        let voteIsActive = false;
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -89,11 +90,14 @@
             switch (message.type) {
                 case 'state_update':
                     updateUserList(message.users);
+                    voteIsActive = message.vote_active;
                     if (message.vote_active) {
                         showVotingButtons();
+                        updateVoteButton(true);
                         document.getElementById('results').style.display = 'none';
                     } else {
                         hideVotingButtons();
+                        updateVoteButton(false);
                     }
                     break;
 
@@ -105,12 +109,39 @@
                     showResults(message.results, message.winner);
                     hideTimer();
                     disableVotingButtons();
+                    updateVoteButton(false);
                     break;
+            }
+        }
+
+        function handleVoteButton() {
+            if (voteIsActive) {
+                abandonVote();
+            } else {
+                startVote();
             }
         }
 
         function startVote() {
             ws.send(JSON.stringify({ type: 'start_vote' }));
+        }
+
+        function abandonVote() {
+            ws.send(JSON.stringify({ type: 'abandon_vote' }));
+        }
+
+        function updateVoteButton(isActive) {
+            const btn = document.getElementById('startVoteBtn');
+            if (isActive) {
+                btn.textContent = 'Abandon Vote';
+                btn.classList.remove('btn-start');
+                btn.classList.add('btn-abandon');
+            } else {
+                btn.textContent = 'Start New Vote';
+                btn.classList.remove('btn-abandon');
+                btn.classList.add('btn-start');
+            }
+            btn.disabled = false;
         }
 
         function vote(choice) {
@@ -136,14 +167,12 @@
 
         function showVotingButtons() {
             document.getElementById('votingButtons').style.display = 'flex';
-            document.getElementById('startVoteBtn').disabled = true;
             enableVotingButtons();
             showTimer();
         }
 
         function hideVotingButtons() {
             document.getElementById('votingButtons').style.display = 'none';
-            document.getElementById('startVoteBtn').disabled = false;
         }
 
         function enableVotingButtons() {
@@ -159,7 +188,12 @@
         }
 
         function showTimer() {
-            document.getElementById('timerDisplay').style.display = 'block';
+            const timerDisplay = document.getElementById('timerDisplay');
+            // Only reset timer value if it's currently hidden (starting fresh vote)
+            if (timerDisplay.style.display === 'none') {
+                document.getElementById('timerValue').textContent = '15';
+            }
+            timerDisplay.style.display = 'block';
         }
 
         function hideTimer() {

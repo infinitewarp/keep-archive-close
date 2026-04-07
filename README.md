@@ -91,7 +91,7 @@ uv run ruff format --check .
 - **Frontend**: Server-side rendered HTML (Jinja2) with vanilla JavaScript
 - **Real-time**: WebSocket connections for live updates
 - **State persistence**: Cookies (user identity) + localStorage (preferences)
-- **Deployment**: Single Podman container
+- **Deployment**: Single Podman/Docker container (multi-arch: amd64, arm64)
 - **Dependency management**: uv with locked dependencies (pyproject.toml)
 - **Resource usage**: ~50-100MB memory footprint
 

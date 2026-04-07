@@ -148,8 +148,10 @@ uv run ruff format --check . # Check formatting without changing files
 **GitHub Actions CI:**
 - Runs automatically on all pull requests (required for merge to main)
 - All checks must pass before PR can be merged
-- Checks: Linting (ruff check), formatting (ruff format), unit tests (pytest), syntax validation, import checks, app startup
-- Workflow file: `.github/workflows/ci.yml`
+- Checks: Linting (ruff check), formatting (ruff format), unit tests (pytest), syntax validation, import checks, app startup, container build
+- Workflow files: 
+  - `.github/workflows/ci.yml` - Code quality and tests
+  - `.github/workflows/container-build.yml` - Multi-arch container build verification (amd64, arm64)
 
 **Manual syntax check:**
 ```bash

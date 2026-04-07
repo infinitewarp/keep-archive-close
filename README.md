@@ -9,6 +9,7 @@ keep-archive-close is a very simple single-purpose multi-user web app that prese
 - Anonymous session URLs (UUID-based)
 - Live participant tracking
 - WebSocket-based real-time updates
+- Automatic dark mode support (respects system preferences)
 - Lightweight single-container deployment
 
 ## Quick Start

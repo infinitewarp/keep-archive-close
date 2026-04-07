@@ -18,7 +18,8 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 - Jinja2 templates served by FastAPI
 - Vanilla JavaScript for WebSocket handling
 - No build step or heavy frontend framework
-- CSS for styling (gradient background, card-based UI)
+- CSS with variable-based theming (gradient background, card-based UI)
+- Automatic dark mode via `prefers-color-scheme` media query
 
 **Session Management:**
 - Sessions identified by UUID (pseudo-anonymous, not security-focused)
@@ -37,7 +38,9 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 - `app/main.py` - FastAPI application, routes, WebSocket endpoint, broadcast logic
 - `app/models.py` - Session state classes (`VotingSession`, `User`, `VotingRound`, `SessionManager`)
 - `app/templates/` - Jinja2 HTML templates (landing page, voting page)
-- `app/static/` - CSS styling
+- `app/static/style.css` - CSS styling with CSS custom properties for theming
+  - All colors defined as variables at top of file for easy customization
+  - Dark mode overrides using `@media (prefers-color-scheme: dark)`
 - `pyproject.toml` - Project metadata and dependencies (managed by uv)
 - `uv.lock` - Locked dependency versions for reproducible installs
 

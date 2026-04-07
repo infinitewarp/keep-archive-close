@@ -1,3 +1,76 @@
+/* Light mode color scheme */
+:root {
+    --bg-body-gradient-start: #667eea;
+    --bg-body-gradient-end: #764ba2;
+    --bg-container: #ffffff;
+    --bg-card: #f9f9f9;
+    --bg-input: #ffffff;
+    --bg-code: #e2e8f0;
+    --bg-result-item: #ffffff;
+    --bg-error: #fed7d7;
+
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    --text-error: #c53030;
+    --text-link: #667eea;
+    --text-link-hover: #5568d3;
+
+    --border-default: #dddddd;
+    --border-focus: #667eea;
+    --border-separator: #e2e8f0;
+
+    --color-primary: #667eea;
+    --color-primary-hover: #5568d3;
+    --color-secondary: #48bb78;
+    --color-secondary-hover: #38a169;
+    --color-start: #764ba2;
+    --color-start-hover: #5f3d84;
+    --color-abandon: #e53e3e;
+    --color-abandon-hover: #c53030;
+    --color-timer: #764ba2;
+    --color-winner: #667eea;
+
+    --color-keep: #48bb78;
+    --color-keep-hover: #38a169;
+    --color-archive: #ed8936;
+    --color-archive-hover: #dd6b20;
+    --color-close: #f56565;
+    --color-close-hover: #e53e3e;
+
+    --shadow-container: 0 20px 60px rgba(0, 0, 0, 0.3);
+    --shadow-button: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode color scheme */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-body-gradient-start: #1a1a2e;
+        --bg-body-gradient-end: #16213e;
+        --bg-container: #1e1e2e;
+        --bg-card: #2a2a3e;
+        --bg-input: #2a2a3e;
+        --bg-code: #1a1a2e;
+        --bg-result-item: #1e1e2e;
+        --bg-error: #4a1a1a;
+
+        --text-primary: #e0e0e0;
+        --text-secondary: #b0b0b0;
+        --text-muted: #808080;
+        --text-error: #ff6b6b;
+        --text-link: #8b9eea;
+        --text-link-hover: #a0b0f0;
+
+        --border-default: #444444;
+        --border-focus: #667eea;
+        --border-separator: #444444;
+
+        --color-timer: #a58dd3;
+
+        --shadow-container: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +79,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--bg-body-gradient-start) 0%, var(--bg-body-gradient-end) 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -17,14 +90,14 @@ body {
 .container {
     max-width: 800px;
     width: 100%;
-    background: white;
+    background: var(--bg-container);
     border-radius: 12px;
     padding: 40px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-container);
 }
 
 h1 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
     text-align: center;
     font-size: 2.5em;
@@ -32,26 +105,26 @@ h1 {
 
 .subtitle {
     text-align: center;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 30px;
     font-size: 1.1em;
 }
 
 .card {
-    background: #f9f9f9;
+    background: var(--bg-card);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 20px;
 }
 
 h2 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 20px;
     font-size: 1.5em;
 }
 
 h3 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 15px;
     margin-top: 15px;
     font-size: 1.2em;
@@ -60,16 +133,18 @@ h3 {
 input[type="text"] {
     width: 100%;
     padding: 12px;
-    border: 2px solid #ddd;
+    background: var(--bg-input);
+    border: 2px solid var(--border-default);
     border-radius: 6px;
     font-size: 16px;
     margin-bottom: 15px;
     transition: border-color 0.3s;
+    color: var(--text-primary);
 }
 
 input[type="text"]:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--border-focus);
 }
 
 .button-group {
@@ -92,7 +167,7 @@ input[type="text"]:focus {
 
 .btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-button);
 }
 
 .btn:disabled {
@@ -101,25 +176,25 @@ input[type="text"]:focus {
 }
 
 .btn-primary {
-    background: #667eea;
+    background: var(--color-primary);
     color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #5568d3;
+    background: var(--color-primary-hover);
 }
 
 .btn-secondary {
-    background: #48bb78;
+    background: var(--color-secondary);
     color: white;
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: #38a169;
+    background: var(--color-secondary-hover);
 }
 
 .btn-start {
-    background: #764ba2;
+    background: var(--color-start);
     color: white;
     width: 100%;
     padding: 16px;
@@ -128,11 +203,11 @@ input[type="text"]:focus {
 }
 
 .btn-start:hover:not(:disabled) {
-    background: #5f3d84;
+    background: var(--color-start-hover);
 }
 
 .btn-abandon {
-    background: #e53e3e;
+    background: var(--color-abandon);
     color: white;
     width: 100%;
     padding: 16px;
@@ -141,19 +216,19 @@ input[type="text"]:focus {
 }
 
 .btn-abandon:hover:not(:disabled) {
-    background: #c53030;
+    background: var(--color-abandon-hover);
 }
 
 .error {
-    background: #fed7d7;
-    color: #c53030;
+    background: var(--bg-error);
+    color: var(--text-error);
     padding: 15px;
     border-radius: 6px;
     margin-top: 15px;
 }
 
 .session-info {
-    background: #f9f9f9;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
@@ -162,25 +237,27 @@ input[type="text"]:focus {
 .session-info p {
     margin: 10px 0;
     font-size: 1.1em;
+    color: var(--text-primary);
 }
 
 .session-info code {
-    background: #e2e8f0;
+    background: var(--bg-code);
     padding: 4px 8px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 0.9em;
+    color: var(--text-primary);
 }
 
 .user-name-edit {
-    color: #667eea;
+    color: var(--text-link);
     cursor: pointer;
     text-decoration: underline;
     font-weight: 600;
 }
 
 .user-name-edit:hover {
-    color: #5568d3;
+    color: var(--text-link-hover);
 }
 
 .voting-area {
@@ -195,9 +272,9 @@ input[type="text"]:focus {
 .timer span {
     font-size: 4em;
     font-weight: bold;
-    color: #764ba2;
+    color: var(--color-timer);
     display: inline-block;
-    background: #f9f9f9;
+    background: var(--bg-card);
     padding: 20px 40px;
     border-radius: 12px;
     min-width: 120px;
@@ -218,34 +295,34 @@ input[type="text"]:focus {
 }
 
 .btn-keep {
-    background: #48bb78;
+    background: var(--color-keep);
     color: white;
 }
 
 .btn-keep:hover:not(:disabled) {
-    background: #38a169;
+    background: var(--color-keep-hover);
 }
 
 .btn-archive {
-    background: #ed8936;
+    background: var(--color-archive);
     color: white;
 }
 
 .btn-archive:hover:not(:disabled) {
-    background: #dd6b20;
+    background: var(--color-archive-hover);
 }
 
 .btn-close {
-    background: #f56565;
+    background: var(--color-close);
     color: white;
 }
 
 .btn-close:hover:not(:disabled) {
-    background: #e53e3e;
+    background: var(--color-close-hover);
 }
 
 .results {
-    background: #f9f9f9;
+    background: var(--bg-card);
     padding: 30px;
     border-radius: 8px;
     margin-top: 20px;
@@ -253,16 +330,17 @@ input[type="text"]:focus {
 
 .result-item {
     padding: 12px;
-    background: white;
+    background: var(--bg-result-item);
     margin-bottom: 10px;
     border-radius: 6px;
     font-size: 1.2em;
+    color: var(--text-primary);
 }
 
 .winner {
     margin-top: 20px;
     padding: 20px;
-    background: #667eea;
+    background: var(--color-winner);
     color: white;
     text-align: center;
     border-radius: 8px;
@@ -271,7 +349,7 @@ input[type="text"]:focus {
 }
 
 .users-section {
-    background: #f9f9f9;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 8px;
 }
@@ -283,11 +361,12 @@ input[type="text"]:focus {
 
 #userList li {
     padding: 12px;
-    background: white;
+    background: var(--bg-result-item);
     margin-bottom: 8px;
     border-radius: 6px;
     font-size: 1.1em;
     transition: opacity 0.3s;
+    color: var(--text-primary);
 }
 
 #userList li.dimmed {
@@ -296,7 +375,7 @@ input[type="text"]:focus {
 
 hr {
     border: none;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid var(--border-separator);
     margin: 20px 0;
 }
 

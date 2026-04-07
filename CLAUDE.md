@@ -45,6 +45,11 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
   - Dark mode overrides using `@media (prefers-color-scheme: dark)`
 - `pyproject.toml` - Project metadata and dependencies (managed by uv)
 - `uv.lock` - Locked dependency versions for reproducible installs
+- `Containerfile` - Multi-stage Alpine-based container build
+  - **Build stage:** Compiles dependencies with build tools
+  - **Runtime stage:** Minimal runtime with only necessary packages
+  - **Size:** ~132MB (44% smaller than debian-slim base)
+  - **Optimizations:** Multi-stage build, Alpine Linux base, cache cleanup
 
 ## Git Workflow
 

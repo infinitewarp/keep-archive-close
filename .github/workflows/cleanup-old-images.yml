@@ -1,0 +1,31 @@
+name: Cleanup Old Container Images
+
+on:
+  # Run weekly on Sundays at 00:00 UTC
+  schedule:
+    - cron: '0 0 * * 0'
+  # Allow manual triggering
+  workflow_dispatch:
+
+env:
+  # Number of recent sha-tagged images to keep (adjust as needed)
+  KEEP_RECENT: 10
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - name: Delete old sha-tagged container images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: keep-archive-close
+          package-type: container
+          min-versions-to-keep: ${{ env.KEEP_RECENT }}
+          # Only delete untagged versions and old sha-tagged versions
+          # Never delete 'latest' tag
+          delete-only-untagged-versions: false
+          # Ignore versions with these tags (keeps 'latest')
+          ignore-versions: '^latest$'

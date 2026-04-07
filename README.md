@@ -2,6 +2,8 @@
 
 keep-archive-close is a very simple single-purpose multi-user web app that presents an interface for a group of participants to vote "keep", "archive", or "close" while a brief timer counts down. This provides a short window for the participants to make a "gut check" assessment of an issue without allowing themselves to get bogged down in the details.
 
+> **Note:** This project was primarily built through pair programming with [Claude Code](https://claude.ai/code). The entire codebase, tests, documentation, and tooling were collaboratively developed through conversational iteration.
+
 ## Features
 
 - Real-time multi-user voting sessions

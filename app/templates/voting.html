@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voting Session - keep-archive-close</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ root_path }}/static/style.css">
 </head>
 <body>
     <div class="container">
@@ -47,6 +47,8 @@
     </div>
 
     <script>
+        // Root path for subpath deployment support
+        const ROOT_PATH = '{{ root_path }}';
         const sessionId = '{{ session_id }}';
         let initialUserName = '{{ user_name }}';
         const initialUserColor = '{{ user_color }}';
@@ -63,7 +65,7 @@
                     initialUserName = prompt('Please enter your name to join this session:');
                     if (initialUserName === null) {
                         // User cancelled, redirect to home
-                        window.location.href = '/';
+                        window.location.href = ROOT_PATH + '/';
                     }
                 }
                 initialUserName = initialUserName.trim();
@@ -83,7 +85,7 @@
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${sessionId}`);
+            ws = new WebSocket(`${protocol}//${window.location.host}${ROOT_PATH}/ws/${sessionId}`);
 
             ws.onopen = function() {
                 console.log('WebSocket connected');
@@ -358,7 +360,7 @@
                     clearInterval(heartbeatInterval);
                 }
                 // Navigate to home
-                window.location.href = '/';
+                window.location.href = ROOT_PATH + '/';
             }
         });
 

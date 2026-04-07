@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import os
 from uuid import uuid4
 
 from fastapi import FastAPI, Form, Request, WebSocket, WebSocketDisconnect
@@ -11,7 +12,11 @@ from fastapi.templating import Jinja2Templates
 
 from app.models import session_manager
 
-app = FastAPI(title="keep-archive-close")
+# Support deployment under a subpath (e.g., /kac)
+# Set via ROOT_PATH environment variable, defaults to "" (root)
+ROOT_PATH = os.getenv("ROOT_PATH", "").rstrip("/")
+
+app = FastAPI(title="keep-archive-close", root_path=ROOT_PATH)
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -21,14 +26,14 @@ templates = Jinja2Templates(directory="app/templates")
 @app.get("/", response_class=HTMLResponse)
 async def landing_page(request: Request):
     """Landing page for entering name and creating/joining session."""
-    return templates.TemplateResponse("landing.html", {"request": request})
+    return templates.TemplateResponse("landing.html", {"request": request, "root_path": ROOT_PATH})
 
 
 @app.post("/create-session")
 async def create_session(name: str = Form(...), color: str = Form("#667eea")):
     """Create a new voting session."""
     session_id = session_manager.create_session()
-    response = RedirectResponse(f"/session/{session_id}", status_code=303)
+    response = RedirectResponse(f"{ROOT_PATH}/session/{session_id}", status_code=303)
     response.set_cookie(key="user_name", value=name, max_age=86400 * 30)  # 30 days
     response.set_cookie(key="user_color", value=color, max_age=86400 * 30)  # 30 days
     return response
@@ -41,8 +46,8 @@ async def join_session(
     """Join an existing voting session."""
     session = session_manager.get_session(session_id)
     if not session:
-        return RedirectResponse("/?error=session_not_found", status_code=303)
-    response = RedirectResponse(f"/session/{session_id}", status_code=303)
+        return RedirectResponse(f"{ROOT_PATH}/?error=session_not_found", status_code=303)
+    response = RedirectResponse(f"{ROOT_PATH}/session/{session_id}", status_code=303)
     response.set_cookie(key="user_name", value=name, max_age=86400 * 30)  # 30 days
     response.set_cookie(key="user_color", value=color, max_age=86400 * 30)  # 30 days
     return response
@@ -53,7 +58,7 @@ async def voting_page(request: Request, session_id: str):
     """Voting session page."""
     session = session_manager.get_session(session_id)
     if not session:
-        return RedirectResponse("/?error=session_not_found", status_code=303)
+        return RedirectResponse(f"{ROOT_PATH}/?error=session_not_found", status_code=303)
 
     # Get name and color from cookies or localStorage fallback
     user_name = request.cookies.get("user_name", "")
@@ -66,6 +71,7 @@ async def voting_page(request: Request, session_id: str):
             "session_id": session_id,
             "user_name": user_name,
             "user_color": user_color,
+            "root_path": ROOT_PATH,
         },
     )
 

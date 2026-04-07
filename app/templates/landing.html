@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>keep-archive-close</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ root_path }}/static/style.css">
 </head>
 <body>
     <div class="container">
@@ -36,6 +36,10 @@
         <div id="error" class="error" style="display: none;"></div>
     </div>
 
+    <script>
+        // Root path for subpath deployment support
+        const ROOT_PATH = '{{ root_path }}';
+    </script>
     <script>
         // Load saved preferences on page load
         window.addEventListener('DOMContentLoaded', function() {
@@ -72,7 +76,7 @@
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/create-session';
+            form.action = ROOT_PATH + '/create-session';
 
             const nameInput = document.createElement('input');
             nameInput.type = 'hidden';
@@ -114,7 +118,7 @@
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/join-session';
+            form.action = ROOT_PATH + '/join-session';
 
             const nameInput = document.createElement('input');
             nameInput.type = 'hidden';

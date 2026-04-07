@@ -2,6 +2,41 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ CRITICAL: ALWAYS CHECK YOUR BRANCH FIRST ⚠️
+
+**BEFORE YOU START ANY WORK, RUN THIS COMMAND:**
+
+```bash
+git branch --show-current
+```
+
+**IF THE OUTPUT IS `main`, YOU MUST CREATE A FEATURE BRANCH:**
+
+```bash
+git checkout -b feature/descriptive-name
+```
+
+### Why This Matters
+
+- ❌ **NEVER COMMIT DIRECTLY TO `main`**
+- ❌ The `main` branch is protected and requires pull requests
+- ❌ Direct commits to `main` violate the repository workflow
+- ✅ All changes MUST go through feature branches and PRs
+
+### Pre-Work Checklist
+
+Before making ANY code changes, verify:
+
+- [ ] Ran `git branch --show-current` to check current branch
+- [ ] If on `main`, created a feature branch with `git checkout -b feature/name`
+- [ ] Ready to commit to feature branch (NOT main)
+
+**If you accidentally commit to `main`, you must move the commits to a feature branch before pushing.**
+
+---
+
 ## Project Overview
 
 keep-archive-close is a single-purpose multi-user web application for quick decision-making. It provides an interface where multiple participants can simultaneously vote on items using three options: "keep", "archive", or "close". A customizable countdown timer (default 15 seconds, adjustable 1-999) enforces time pressure, encouraging participants to make gut-check assessments without over-analyzing details. Users personalize their experience with custom names and colors that persist across sessions.
@@ -48,30 +83,78 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 - `Containerfile` - Multi-stage Alpine-based container build
   - **Build stage:** Compiles dependencies with build tools
   - **Runtime stage:** Minimal runtime with only necessary packages
-  - **Size:** ~132MB (44% smaller than debian-slim base)
-  - **Optimizations:** Multi-stage build, Alpine Linux base, cache cleanup
+  - **Size:** ~68MB (74% smaller than original)
+  - **Optimizations:** Multi-stage build, Alpine Linux base, stripped binaries, explicit dependencies
 
 ## Git Workflow
 
-**IMPORTANT: The `main` branch is protected and requires pull requests.**
+### Branch Protection Rules
 
-**Before making any changes:**
-1. Check current branch: `git branch --show-current`
-2. If on `main`, create a feature branch: `git checkout -b feature/your-feature-name`
-3. Make your changes and commit to the feature branch
-4. Push the feature branch: `git push -u origin feature/your-feature-name`
-5. Create a pull request on GitHub to merge into `main`
+**The `main` branch is protected.** You cannot push commits directly to it.
 
-**Branch naming conventions:**
+### Complete Workflow
+
+**1. ALWAYS start by checking your branch:**
+```bash
+git branch --show-current
+```
+
+**2. If on `main`, create a feature branch BEFORE making changes:**
+```bash
+git checkout -b feature/descriptive-name
+```
+
+**3. Make your changes and commit to the feature branch:**
+```bash
+git add <files>
+git commit -m "Description of changes"
+```
+
+**4. Push the feature branch:**
+```bash
+git push -u origin feature/descriptive-name
+```
+
+**5. Create a pull request:**
+```bash
+gh pr create --title "Title" --body "Description"
+```
+
+**6. After PR is approved and CI passes, merge with rebase:**
+```bash
+gh pr merge <number> --rebase --delete-branch
+```
+
+### Branch Naming Conventions
+
 - Feature branches: `feature/descriptive-name`
 - Bug fixes: `fix/descriptive-name`
 - Documentation: `docs/descriptive-name`
 
-**Merge strategy:**
+### Merge Strategy
+
 - **Rebase only**: The repository is configured to only allow rebase merges (no merge commits or squashing)
 - This maintains a **linear history** without merge commits
 - Feature branches are automatically deleted after merge
 - When merging PRs: `gh pr merge <number> --rebase --delete-branch`
+
+### Recovery: If You Accidentally Commit to `main`
+
+If you realize you committed to `main` before pushing:
+
+```bash
+# Create a branch at current commit
+git branch feature/your-feature-name
+
+# Reset main to remote state
+git reset --hard origin/main
+
+# Switch to feature branch
+git checkout feature/your-feature-name
+
+# Push feature branch and create PR
+git push -u origin feature/your-feature-name
+```
 
 **Never commit directly to `main`.** All changes must go through pull requests to ensure CI checks pass and maintain code quality.
 
@@ -170,8 +253,8 @@ uv run pytest
 **Test configuration:**
 - Test framework: pytest with pytest-asyncio
 - Test timeout: 5 seconds (configured globally to prevent hangs)
-- Test coverage: models (VotingSession, SessionManager), API endpoints, WebSocket functionality
-- Test organization: `tests/test_models.py`, `tests/test_api.py`, `tests/test_websocket.py`
+- Test coverage: models (VotingSession, SessionManager), API endpoints, WebSocket functionality, subpath deployment
+- Test organization: `tests/test_models.py`, `tests/test_api.py`, `tests/test_websocket.py`, `tests/test_subpath.py`
 
 **Run specific tests:**
 ```bash

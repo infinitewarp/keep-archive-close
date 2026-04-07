@@ -57,6 +57,19 @@ uv sync --extra dev
 uv run pytest
 ```
 
+### Run linting
+
+```bash
+./run-lint.sh
+```
+
+Or manually:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+```
+
 ## How It Works
 
 1. Enter your name and pick a color on the landing page

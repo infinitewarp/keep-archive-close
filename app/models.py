@@ -1,29 +1,32 @@
 """Session and voting state management."""
+
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Set
+from typing import Any
 from uuid import uuid4
 
 
 @dataclass
 class User:
     """Represents a user in a voting session."""
+
     connection_id: str
     name: str
     websocket: object
     color: str = "#667eea"
     last_seen: float = field(default_factory=time.time)
     has_voted: bool = False
-    vote: Optional[str] = None
+    vote: str | None = None
 
 
 @dataclass
 class VotingRound:
     """Represents a single voting round."""
+
     active: bool = False
-    start_time: Optional[float] = None
+    start_time: float | None = None
     duration: int = 15
-    votes: Dict[str, str] = field(default_factory=dict)  # connection_id -> vote choice
+    votes: dict[str, str] = field(default_factory=dict)  # connection_id -> vote choice
 
 
 class VotingSession:
@@ -31,7 +34,7 @@ class VotingSession:
 
     def __init__(self, session_id: str):
         self.session_id = session_id
-        self.users: Dict[str, User] = {}  # connection_id -> User
+        self.users: dict[str, User] = {}  # connection_id -> User
         self.current_round: VotingRound = VotingRound()
         self.created_at = time.time()
 
@@ -83,7 +86,7 @@ class VotingSession:
             user.has_voted = False
             user.vote = None
 
-    def end_vote(self) -> Dict[str, int]:
+    def end_vote(self) -> dict[str, int]:
         """End the current voting round and return results."""
         self.current_round.active = False
 
@@ -95,7 +98,7 @@ class VotingSession:
 
         return results
 
-    def get_inactive_users(self, timeout_seconds: int = 30) -> Set[str]:
+    def get_inactive_users(self, timeout_seconds: int = 30) -> set[str]:
         """Get connection IDs of users who haven't been seen recently."""
         now = time.time()
         inactive = set()
@@ -115,7 +118,7 @@ class VotingSession:
                 "connection_id": user.connection_id,
                 "name": user.name,
                 "color": user.color,
-                "has_voted": user.has_voted
+                "has_voted": user.has_voted,
             }
             for user in self.users.values()
         ]
@@ -125,7 +128,7 @@ class SessionManager:
     """Manages all active voting sessions."""
 
     def __init__(self):
-        self.sessions: Dict[str, VotingSession] = {}
+        self.sessions: dict[str, VotingSession] = {}
 
     def create_session(self) -> str:
         """Create a new voting session and return its ID."""
@@ -133,7 +136,7 @@ class SessionManager:
         self.sessions[session_id] = VotingSession(session_id)
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[VotingSession]:
+    def get_session(self, session_id: str) -> VotingSession | None:
         """Get a session by ID."""
         return self.sessions.get(session_id)
 

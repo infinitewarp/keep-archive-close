@@ -101,9 +101,29 @@ uv run pytest -k test_name           # Run specific test by name
 
 ## Code Quality & CI
 
+**Linting and formatting:**
+```bash
+./run-lint.sh  # Check linting and formatting
+```
+
+Or manually:
+```bash
+uv run ruff check .          # Run linter
+uv run ruff check --fix .    # Auto-fix linting issues
+uv run ruff format .         # Format code
+uv run ruff format --check . # Check formatting without changing files
+```
+
+**Linting configuration:**
+- Tool: ruff 0.15.9 (fast Rust-based linter and formatter)
+- Line length: 100 characters
+- Target: Python 3.14
+- Enabled rules: pycodestyle, pyflakes, isort, pep8-naming, pyupgrade, flake8-bugbear, flake8-comprehensions, flake8-simplify
+- Modern type hints: Uses `X | None` instead of `Optional[X]`, `dict/list/set` instead of `Dict/List/Set`
+
 **GitHub Actions CI:**
 - Runs automatically on pull requests and pushes to main
-- Checks: Python syntax validation, dependency installation, import checks, app startup
+- Checks: Linting (ruff check), formatting (ruff format), unit tests (pytest), syntax validation, import checks, app startup
 - Workflow file: `.github/workflows/ci.yml`
 
 **Manual syntax check:**

@@ -1,6 +1,4 @@
 """Tests for WebSocket functionality."""
-import asyncio
-import json
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,11 +25,7 @@ class TestWebSocketConnection:
 
         with client.websocket_connect(f"/ws/{session_id}") as websocket:
             # Send join message
-            websocket.send_json({
-                "type": "join",
-                "name": "Alice",
-                "color": "#ff0000"
-            })
+            websocket.send_json({"type": "join", "name": "Alice", "color": "#ff0000"})
 
             # Receive state update
             data = websocket.receive_json()
@@ -47,6 +41,7 @@ class TestWebSocketConnection:
 
         # TestClient doesn't raise on close, just check session doesn't exist
         from starlette.websockets import WebSocketDisconnect
+
         try:
             with client.websocket_connect("/ws/nonexistent-id") as websocket:
                 # Connection established but should be closed by server
@@ -54,7 +49,7 @@ class TestWebSocketConnection:
                 websocket.send_json({"type": "join", "name": "Test", "color": "#ff0000"})
                 websocket.receive_json(timeout=1)  # Should timeout or disconnect
                 pytest.fail("Expected connection to be closed")
-        except (WebSocketDisconnect, Exception):
+        except WebSocketDisconnect, Exception:
             pass  # Expected - connection was closed
 
     def test_websocket_multiple_users(self):
@@ -227,8 +222,9 @@ class TestVoteResults:
 
     def test_vote_results_single_winner(self):
         """Test vote results with a clear winner."""
-        from app.models import VotingSession
         from unittest.mock import Mock
+
+        from app.models import VotingSession
 
         session = VotingSession("test-session")
         ws1, ws2, ws3 = Mock(), Mock(), Mock()
@@ -249,8 +245,9 @@ class TestVoteResults:
 
     def test_vote_results_tie(self):
         """Test vote results with a tie."""
-        from app.models import VotingSession
         from unittest.mock import Mock
+
+        from app.models import VotingSession
 
         session = VotingSession("test-session")
         ws1, ws2 = Mock(), Mock()

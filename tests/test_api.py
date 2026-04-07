@@ -1,4 +1,5 @@
 """Tests for FastAPI endpoints."""
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -38,9 +39,7 @@ class TestCreateSession:
     def test_create_session_success(self, client):
         """Test creating a new session."""
         response = client.post(
-            "/create-session",
-            data={"name": "Alice", "color": "#ff0000"},
-            follow_redirects=False
+            "/create-session", data={"name": "Alice", "color": "#ff0000"}, follow_redirects=False
         )
 
         assert response.status_code == 303
@@ -54,11 +53,7 @@ class TestCreateSession:
 
     def test_create_session_default_color(self, client):
         """Test creating a session with default color."""
-        response = client.post(
-            "/create-session",
-            data={"name": "Bob"},
-            follow_redirects=False
-        )
+        response = client.post("/create-session", data={"name": "Bob"}, follow_redirects=False)
 
         assert response.status_code == 303
         assert response.cookies["user_color"] == "#667eea"
@@ -66,9 +61,7 @@ class TestCreateSession:
     def test_create_session_creates_in_manager(self, client):
         """Test that session is created in session manager."""
         response = client.post(
-            "/create-session",
-            data={"name": "Charlie", "color": "#00ff00"},
-            follow_redirects=False
+            "/create-session", data={"name": "Charlie", "color": "#00ff00"}, follow_redirects=False
         )
 
         # Extract session ID from redirect location
@@ -89,7 +82,7 @@ class TestJoinSession:
         response = client.post(
             "/join-session",
             data={"session_id": session_id, "name": "Diana", "color": "#0000ff"},
-            follow_redirects=False
+            follow_redirects=False,
         )
 
         assert response.status_code == 303
@@ -102,7 +95,7 @@ class TestJoinSession:
         response = client.post(
             "/join-session",
             data={"session_id": "nonexistent-id", "name": "Eve", "color": "#ff00ff"},
-            follow_redirects=False
+            follow_redirects=False,
         )
 
         assert response.status_code == 303
@@ -117,8 +110,7 @@ class TestVotingPage:
         session_id = session_manager.create_session()
 
         response = client.get(
-            f"/session/{session_id}",
-            cookies={"user_name": "Frank", "user_color": "#ffff00"}
+            f"/session/{session_id}", cookies={"user_name": "Frank", "user_color": "#ffff00"}
         )
 
         assert response.status_code == 200
@@ -128,10 +120,7 @@ class TestVotingPage:
 
     def test_voting_page_with_nonexistent_session(self, client):
         """Test accessing a nonexistent session redirects."""
-        response = client.get(
-            "/session/nonexistent-id",
-            follow_redirects=False
-        )
+        response = client.get("/session/nonexistent-id", follow_redirects=False)
 
         assert response.status_code == 303
         assert response.headers["location"] == "/?error=session_not_found"

@@ -1,10 +1,9 @@
 """Tests for session and voting state management."""
+
 import time
 from unittest.mock import Mock
 
-import pytest
-
-from app.models import User, VotingRound, VotingSession, SessionManager
+from app.models import SessionManager, User, VotingRound, VotingSession
 
 
 class TestUser:
@@ -264,13 +263,13 @@ class TestVotingSession:
             "connection_id": "conn-1",
             "name": "Alice",
             "color": "#ff0000",
-            "has_voted": True
+            "has_voted": True,
         }
         assert user_list[1] == {
             "connection_id": "conn-2",
             "name": "Bob",
             "color": "#00ff00",
-            "has_voted": False
+            "has_voted": False,
         }
 
 
@@ -329,7 +328,7 @@ class TestSessionManager:
 
         ws1, ws2 = Mock(), Mock()
         user1 = session.add_user("conn-1", "Alice", ws1)
-        user2 = session.add_user("conn-2", "Bob", ws2)
+        session.add_user("conn-2", "Bob", ws2)
 
         # Make user1 inactive
         user1.last_seen = time.time() - 40

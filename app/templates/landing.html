@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>keep-archive-close</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>keep-archive-close</h1>
+        <p class="subtitle">Quick decision voting for your backlog</p>
+
+        <div class="card">
+            <h2>Enter Your Name</h2>
+            <input type="text" id="userName" placeholder="Your name" autofocus>
+
+            <div class="button-group">
+                <button onclick="createSession()" class="btn btn-primary">Create New Session</button>
+                <button onclick="showJoinForm()" class="btn btn-secondary">Join Existing Session</button>
+            </div>
+
+            <div id="joinForm" style="display: none;">
+                <hr>
+                <h3>Join Session</h3>
+                <input type="text" id="sessionId" placeholder="Session ID">
+                <button onclick="joinSession()" class="btn btn-primary">Join</button>
+            </div>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Check for error in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = 'Session not found. Please check the session ID.';
+            errorDiv.style.display = 'block';
+        }
+
+        function createSession() {
+            const name = document.getElementById('userName').value.trim();
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/create-session';
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'hidden';
+            nameInput.name = 'name';
+            nameInput.value = name;
+            form.appendChild(nameInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function showJoinForm() {
+            document.getElementById('joinForm').style.display = 'block';
+        }
+
+        function joinSession() {
+            const name = document.getElementById('userName').value.trim();
+            const sessionId = document.getElementById('sessionId').value.trim();
+
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            if (!sessionId) {
+                alert('Please enter a session ID');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/join-session';
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'hidden';
+            nameInput.name = 'name';
+            nameInput.value = name;
+            form.appendChild(nameInput);
+
+            const sessionInput = document.createElement('input');
+            sessionInput.type = 'hidden';
+            sessionInput.name = 'session_id';
+            sessionInput.value = sessionId;
+            form.appendChild(sessionInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Allow Enter key to trigger actions
+        document.getElementById('userName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createSession();
+            }
+        });
+
+        document.getElementById('sessionId')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                joinSession();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  sanity-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Compile Python files (syntax check)
+        run: |
+          uv run python -m py_compile app/__init__.py
+          uv run python -m py_compile app/main.py
+          uv run python -m py_compile app/models.py
+
+      - name: Check imports
+        run: |
+          uv run python -c "from app import main, models"
+
+      - name: Verify app can start
+        run: |
+          timeout 5 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 || [ $? -eq 124 ]
+        continue-on-error: false

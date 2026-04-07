@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Session - keep-archive-close</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Voting Session</h1>
+
+        <div class="session-info">
+            <p>Session ID: <code id="sessionId">{{ session_id }}</code></p>
+            <p>You are: <span id="currentUserName" class="user-name-edit">{{ user_name }}</span></p>
+        </div>
+
+        <div class="voting-area">
+            <button id="startVoteBtn" onclick="startVote()" class="btn btn-start">Start New Vote</button>
+
+            <div id="timerDisplay" class="timer" style="display: none;">
+                <span id="timerValue">15</span>
+            </div>
+
+            <div id="votingButtons" class="vote-buttons" style="display: none;">
+                <button onclick="vote('keep')" class="btn vote-btn btn-keep" disabled>Keep</button>
+                <button onclick="vote('archive')" class="btn vote-btn btn-archive" disabled>Archive</button>
+                <button onclick="vote('close')" class="btn vote-btn btn-close" disabled>Close</button>
+            </div>
+
+            <div id="results" class="results" style="display: none;">
+                <h2>Results</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+
+        <div class="users-section">
+            <h3>Participants</h3>
+            <ul id="userList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = '{{ session_id }}';
+        const initialUserName = '{{ user_name }}';
+        let currentUserName = initialUserName;
+        let connectionId = null;
+        let ws = null;
+        let heartbeatInterval = null;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${sessionId}`);
+
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+                // Send join message
+                ws.send(JSON.stringify({
+                    type: 'join',
+                    name: currentUserName
+                }));
+
+                // Start heartbeat
+                heartbeatInterval = setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'heartbeat' }));
+                    }
+                }, 5000); // Send heartbeat every 5 seconds
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleMessage(message);
+            };
+
+            ws.onclose = function() {
+                console.log('WebSocket disconnected');
+                clearInterval(heartbeatInterval);
+                // Attempt to reconnect after 2 seconds
+                setTimeout(connectWebSocket, 2000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleMessage(message) {
+            switch (message.type) {
+                case 'state_update':
+                    updateUserList(message.users);
+                    if (message.vote_active) {
+                        showVotingButtons();
+                        document.getElementById('results').style.display = 'none';
+                    } else {
+                        hideVotingButtons();
+                    }
+                    break;
+
+                case 'timer_update':
+                    updateTimer(message.remaining);
+                    break;
+
+                case 'vote_results':
+                    showResults(message.results, message.winner);
+                    hideTimer();
+                    disableVotingButtons();
+                    break;
+            }
+        }
+
+        function startVote() {
+            ws.send(JSON.stringify({ type: 'start_vote' }));
+        }
+
+        function vote(choice) {
+            ws.send(JSON.stringify({
+                type: 'vote',
+                vote: choice
+            }));
+        }
+
+        function updateUserList(users) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.name;
+                if (!user.has_voted) {
+                    li.classList.add('dimmed');
+                }
+                userList.appendChild(li);
+            });
+        }
+
+        function showVotingButtons() {
+            document.getElementById('votingButtons').style.display = 'flex';
+            document.getElementById('startVoteBtn').disabled = true;
+            enableVotingButtons();
+            showTimer();
+        }
+
+        function hideVotingButtons() {
+            document.getElementById('votingButtons').style.display = 'none';
+            document.getElementById('startVoteBtn').disabled = false;
+        }
+
+        function enableVotingButtons() {
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.disabled = false;
+            });
+        }
+
+        function disableVotingButtons() {
+            document.querySelectorAll('.vote-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+        }
+
+        function showTimer() {
+            document.getElementById('timerDisplay').style.display = 'block';
+        }
+
+        function hideTimer() {
+            document.getElementById('timerDisplay').style.display = 'none';
+        }
+
+        function updateTimer(remaining) {
+            document.getElementById('timerValue').textContent = remaining;
+        }
+
+        function showResults(results, winner) {
+            const resultsContent = document.getElementById('resultsContent');
+            resultsContent.innerHTML = `
+                <div class="result-item">Keep: ${results.keep}</div>
+                <div class="result-item">Archive: ${results.archive}</div>
+                <div class="result-item">Close: ${results.close}</div>
+                <div class="winner">Winner: ${winner === 'tie' ? 'TIE' : winner.toUpperCase()}</div>
+            `;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Make user name editable
+        document.getElementById('currentUserName').addEventListener('click', function() {
+            const newName = prompt('Enter your new name:', currentUserName);
+            if (newName && newName.trim()) {
+                currentUserName = newName.trim();
+                this.textContent = currentUserName;
+                ws.send(JSON.stringify({
+                    type: 'rename',
+                    name: currentUserName
+                }));
+            }
+        });
+
+        // Connect on page load
+        connectWebSocket();
+    </script>
+</body>
+</html>

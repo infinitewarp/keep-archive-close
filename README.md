@@ -44,6 +44,19 @@ uv sync
 uv run uvicorn app.main:app --reload
 ```
 
+### Run tests
+
+```bash
+./run-tests.sh
+```
+
+Or manually:
+
+```bash
+uv sync --extra dev
+uv run pytest
+```
+
 ## How It Works
 
 1. Enter your name and pick a color on the landing page

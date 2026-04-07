@@ -80,7 +80,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
     # Generate connection ID and get user info
     connection_id = str(uuid4())
-    active_connections[connection_id] = websocket
 
     user = None
 
@@ -147,7 +146,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         pass
     finally:
         # Clean up
-        active_connections.pop(connection_id, None)
         if session and user:
             session.remove_user(connection_id)
             await broadcast_session_state(session)

@@ -72,6 +72,33 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Access at: http://localhost:8000
 
+## Testing
+
+**Run unit tests:**
+```bash
+./run-tests.sh
+```
+
+Or manually:
+```bash
+uv sync --extra dev
+uv run pytest
+```
+
+**Test configuration:**
+- Test framework: pytest with pytest-asyncio
+- Test timeout: 5 seconds (configured globally to prevent hangs)
+- Test coverage: models (VotingSession, SessionManager), API endpoints, WebSocket functionality
+- Test organization: `tests/test_models.py`, `tests/test_api.py`, `tests/test_websocket.py`
+
+**Run specific tests:**
+```bash
+uv run pytest tests/test_models.py  # Model tests only
+uv run pytest tests/test_api.py     # API endpoint tests only
+uv run pytest -v                     # Verbose output
+uv run pytest -k test_name           # Run specific test by name
+```
+
 ## Code Quality & CI
 
 **GitHub Actions CI:**

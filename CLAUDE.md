@@ -107,6 +107,53 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 Access at: http://localhost:8000
 
+## Reverse Proxy Deployment
+
+**Running behind nginx with subpath:**
+
+The application supports deployment under a subpath (e.g., `example.com/kac`) via the `ROOT_PATH` environment variable.
+
+**Example nginx configuration:**
+```nginx
+location /kac {
+    # Pass requests to the container
+    proxy_pass http://localhost:8000;
+    
+    # Standard proxy headers
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    
+    # WebSocket support (required for real-time updates)
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    
+    # Timeouts for WebSocket connections
+    proxy_read_timeout 86400;
+    proxy_send_timeout 86400;
+}
+```
+
+**Run container with ROOT_PATH:**
+```bash
+podman run -e ROOT_PATH=/kac -p 8000:8000 ghcr.io/infinitewarp/keep-archive-close:latest
+```
+
+**Docker Compose example:**
+```yaml
+services:
+  keep-archive-close:
+    image: ghcr.io/infinitewarp/keep-archive-close:latest
+    environment:
+      - ROOT_PATH=/kac
+    ports:
+      - "8000:8000"
+```
+
+The app will then be accessible at `example.com/kac/` and all URLs, WebSocket connections, and redirects will work correctly.
+
 ## Testing
 
 **Run unit tests:**
@@ -204,6 +251,16 @@ uv run python -c "from app import main, models"
 6. **Presence Detection**: Heartbeat every 5s, cleanup every 10s, 30s timeout
 
 ## Configuration
+
+**Environment Variables:**
+
+- `ROOT_PATH` - Subpath for reverse proxy deployment (default: `""` for root)
+  - Set to `/kac` to serve app at `example.com/kac` instead of `example.com/`
+  - Used when running behind nginx/Apache reverse proxy with subpath routing
+  - No need to rebuild container - configured at deployment time
+  - Example: `podman run -e ROOT_PATH=/kac -p 8000:8000 keep-archive-close`
+
+**Application Settings:**
 
 - Vote timer duration: Customizable per vote (1-999 seconds), default 15
   - User-adjustable input on voting page (disabled during active vote)

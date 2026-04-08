@@ -1,11 +1,51 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# Python bytecode and cache files
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
 .Python
+
+# Databases
 *.db
+
+# Version control
 .git
 .gitignore
+
+# Virtual environments
 venv/
 env/
 .venv/
+
+# Tests (not needed in production container)
+tests/
+pytest.ini
+.pytest_cache/
+
+# Development tools
+.ruff_cache/
+.mypy_cache/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# CI/CD
+.github/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Container ignore files themselves
+.containerignore
+.dockerignore
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

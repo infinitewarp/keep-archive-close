@@ -205,9 +205,15 @@ The application supports deployment under a subpath (e.g., `example.com/kac`) vi
 
 **Example nginx configuration:**
 ```nginx
-location /kac {
-    # Pass requests to the container
-    proxy_pass http://localhost:8000;
+# Redirect /kac to /kac/ (exact match)
+location = /kac {
+    return 301 $scheme://$host/kac/;
+}
+
+# Proxy /kac/ and all subpaths
+location /kac/ {
+    # Trailing slash in proxy_pass strips /kac prefix before forwarding
+    proxy_pass http://localhost:8000/;
     
     # Standard proxy headers
     proxy_set_header Host $host;
@@ -225,6 +231,14 @@ location /kac {
     proxy_send_timeout 86400;
 }
 ```
+
+**Important notes:**
+- The `location = /kac` block handles the exact URL without trailing slash and redirects to add it
+- The `location /kac/` block handles all paths under `/kac/` and strips the `/kac` prefix via the trailing slash in `proxy_pass`
+- **The trailing slash in `proxy_pass` is CRITICAL** - without it, nginx forwards `/kac/ws/123` as `/kac/ws/123` to the container, but the app routes are defined as `/ws/123` (without prefix), causing 404 errors
+- Both location blocks are required for proper functionality
+- The `--proxy-headers` flag in uvicorn (configured in Containerfile) is required for proper proxy header handling, especially for WebSocket connections
+- The `ROOT_PATH` environment variable is used in templates for URL generation to create links with the `/kac` prefix
 
 **Run container with ROOT_PATH:**
 ```bash

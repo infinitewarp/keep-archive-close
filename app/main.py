@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, Form, Request, WebSocket, WebSocketDisconnect
@@ -16,6 +17,18 @@ from app.models import session_manager
 # Set via ROOT_PATH environment variable, defaults to "" (root)
 ROOT_PATH = os.getenv("ROOT_PATH", "").rstrip("/")
 
+
+# Read version for cache busting (from VERSION file or fallback to "dev")
+def get_app_version() -> str:
+    """Get application version for static file cache busting."""
+    version_file = Path(__file__).parent.parent / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    return "dev"
+
+
+APP_VERSION = get_app_version()
+
 app = FastAPI(title="keep-archive-close", root_path=ROOT_PATH)
 
 # Mount static files and templates
@@ -26,7 +39,9 @@ templates = Jinja2Templates(directory="app/templates")
 @app.get("/", response_class=HTMLResponse)
 async def landing_page(request: Request):
     """Landing page for entering name and creating/joining session."""
-    return templates.TemplateResponse("landing.html", {"request": request, "root_path": ROOT_PATH})
+    return templates.TemplateResponse(
+        "landing.html", {"request": request, "root_path": ROOT_PATH, "version": APP_VERSION}
+    )
 
 
 @app.post("/create-session")
@@ -72,6 +87,7 @@ async def voting_page(request: Request, session_id: str):
             "user_name": user_name,
             "user_color": user_color,
             "root_path": ROOT_PATH,
+            "version": APP_VERSION,
         },
     )
 

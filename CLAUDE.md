@@ -55,6 +55,7 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 - No build step or heavy frontend framework
 - CSS with variable-based theming (gradient background, card-based UI)
 - Automatic dark mode via `prefers-color-scheme` media query
+- Automatic cache busting for CSS via version query parameter (updates with each deployment)
 
 **Session Management:**
 - Sessions identified by UUID (pseudo-anonymous, not security-focused)
@@ -73,18 +74,24 @@ keep-archive-close is a single-purpose multi-user web application for quick deci
 ## Key Components
 
 - `app/main.py` - FastAPI application, routes, WebSocket endpoint, broadcast logic
+  - Reads `VERSION` file at startup for static file cache busting
 - `app/models.py` - Session state classes (`VotingSession`, `User`, `VotingRound`, `SessionManager`)
 - `app/templates/` - Jinja2 HTML templates (landing page, voting page)
+  - Templates include version parameter in CSS links: `style.css?v={{ version }}`
 - `app/static/style.css` - CSS styling with CSS custom properties for theming
   - All colors defined as variables at top of file for easy customization
   - Dark mode overrides using `@media (prefers-color-scheme: dark)`
 - `pyproject.toml` - Project metadata and dependencies (managed by uv)
 - `uv.lock` - Locked dependency versions for reproducible installs
+- `VERSION` - Version identifier for cache busting (created at build time, contains git commit SHA)
+  - In containers: git SHA from build time (e.g., `9f0c320...`)
+  - Local development: falls back to `"dev"` if file doesn't exist
 - `Containerfile` - Multi-stage Alpine-based container build
   - **Build stage:** Compiles dependencies with build tools
   - **Runtime stage:** Minimal runtime with only necessary packages
   - **Size:** ~68MB (74% smaller than original)
   - **Optimizations:** Multi-stage build, Alpine Linux base, stripped binaries, explicit dependencies
+  - **Cache busting:** Captures git SHA via build arg and writes to VERSION file
 
 ## Git Workflow
 
@@ -342,6 +349,14 @@ uv run python -c "from app import main, models"
   - Used when running behind nginx/Apache reverse proxy with subpath routing
   - No need to rebuild container - configured at deployment time
   - Example: `podman run -e ROOT_PATH=/kac -p 8000:8000 keep-archive-close`
+
+**Build-time Configuration:**
+
+- Static file cache busting: Automatically versioned via VERSION file
+  - Container builds: VERSION file created with git commit SHA from build arg
+  - Local development: Falls back to "dev" when VERSION file absent
+  - CSS links include version: `/static/style.css?v={version}`
+  - No manual intervention needed - updates automatically with each build
 
 **Application Settings:**
 

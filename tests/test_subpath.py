@@ -39,7 +39,7 @@ class TestRootPathDefault:
 
         assert response.status_code == 200
         assert b"const ROOT_PATH = '';" in response.content
-        assert b'href="/static/style.css"' in response.content
+        assert b'href="/static/style.css?v=' in response.content
 
     def test_create_session_redirects_without_prefix(self, client):
         """Test session creation redirects to /session/{id}."""
@@ -72,7 +72,7 @@ class TestRootPathDefault:
 
         assert response.status_code == 200
         assert b"const ROOT_PATH = '';" in response.content
-        assert b'href="/static/style.css"' in response.content
+        assert b'href="/static/style.css?v=' in response.content
 
 
 class TestRootPathWithSubpath:
@@ -96,7 +96,7 @@ class TestRootPathWithSubpath:
 
         assert response.status_code == 200
         assert b"const ROOT_PATH = '/kac';" in response.content
-        assert b'href="/kac/static/style.css"' in response.content
+        assert b'href="/kac/static/style.css?v=' in response.content
 
     def test_create_session_redirects_with_prefix(self, client):
         """Test session creation redirects to /kac/session/{id}."""
@@ -146,7 +146,7 @@ class TestRootPathWithSubpath:
 
         assert response.status_code == 200
         assert b"const ROOT_PATH = '/kac';" in response.content
-        assert b'href="/kac/static/style.css"' in response.content
+        assert b'href="/kac/static/style.css?v=' in response.content
 
     def test_voting_page_nonexistent_redirects_with_prefix(self, client):
         """Test voting page for nonexistent session redirects with prefix."""
@@ -196,7 +196,7 @@ class TestRootPathTrailingSlash:
         assert response.status_code == 200
         # Should have /kac not /kac/
         assert b"const ROOT_PATH = '/kac';" in response.content
-        assert b'href="/kac/static/style.css"' in response.content
+        assert b'href="/kac/static/style.css?v=' in response.content
         # Should not have double slashes
         assert b'href="/kac//static' not in response.content
 

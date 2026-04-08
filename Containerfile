@@ -1,6 +1,9 @@
 # Build stage
 FROM python:3.14-alpine AS builder
 
+# Capture version at build time (git commit hash)
+ARG VERSION=dev
+
 WORKDIR /app
 
 # Install build dependencies for Python packages with C extensions
@@ -29,6 +32,10 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code only (not tests, docs, etc.)
 COPY app ./app
+
+# Write version file for cache busting
+ARG VERSION=dev
+RUN echo "$VERSION" > /app/VERSION
 
 EXPOSE 8000
 
